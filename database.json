@@ -1,0 +1,18 @@
+[
+    {
+        "amount": 1.0,
+        "category": "Business"
+    },
+    {
+        "amount": 10000000000000.0,
+        "category": "Crypto"
+    },
+    {
+        "amount": -10000000000000.0,
+        "category": "Life"
+    },
+    {
+        "amount": 1000.0,
+        "category": "Rent"
+    }
+]

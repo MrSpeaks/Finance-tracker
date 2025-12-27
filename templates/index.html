@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fintech Ledger Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #10b981;
+            --dark: #1e293b;
+            --bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--dark);
+        }
+
+        header {
+            background-color: var(--dark);
+            color: white;
+            width: 100%;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .balance-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .balance-card h2 {
+            margin: 0;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+        }
+
+        .balance-amount {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            color: var(--primary);
+        }
+
+        .form-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .transaction-item {
+            background: white;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .cat-name { font-weight: 600; }
+        .amt-val { color: var(--success); font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>My Fintech Startup</h1>
+    </header>
+
+    <div class="container">
+        <div class="balance-card">
+            <h2>Current Balance</h2>
+            <div class="balance-amount">${{ "{:,.2f}".format(balance) }}</div>
+        </div>
+
+        <div class="form-card">
+            <form action="/add" method="post">
+                <input type="number" step="0.01" name="amount" placeholder="0.00" required>
+                <input type="text" name="category" placeholder="Reference (e.g. Rent, Crypto, Food)" required>
+                <button type="submit">Confirm Transaction</button>
+            </form>
+        </div>
+
+        <h3>Recent Activity</h3>
+        <ul class="history-list">
+            {% for item in tx_list %}
+            <li class="transaction-item">
+                <span class="cat-name">{{ item.category }}</span>
+                <span class="amt-val">+ ${{ "{:,.2f}".format(item.amount|float) }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</body>
+</html>

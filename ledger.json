@@ -1,0 +1,19 @@
+{
+    "Speaks": [
+        {
+            "amount": -10.0,
+            "description": "Food",
+            "type": "expense"
+        },
+        {
+            "amount": -54.0,
+            "description": "Fun",
+            "type": "expense"
+        },
+        {
+            "amount": 1000.0,
+            "description": "Business ",
+            "type": "income"
+        }
+    ]
+}
