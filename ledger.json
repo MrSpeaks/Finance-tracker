@@ -14,6 +14,29 @@
             "amount": 1000.0,
             "description": "Business ",
             "type": "income"
+        },
+        {
+            "amount": 1000.0,
+            "description": "Business ",
+            "type": "income",
+            "date": "2025-12-31",
+            "time": "09:07 PM"
+        }
+    ],
+    "Ginni": [
+        {
+            "amount": -12048.192771084337,
+            "description": "Car",
+            "type": "expense",
+            "date": "2025-12-31",
+            "time": "09:19 PM"
+        },
+        {
+            "amount": 24096.385542168675,
+            "description": "Business ",
+            "type": "income",
+            "date": "2025-12-31",
+            "time": "09:19 PM"
         }
     ]
 }

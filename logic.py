@@ -1,15 +1,16 @@
 import json
 import os
+from datetime import datetime
 from flask import Flask, render_template, request, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "fintech_founder_key_2025"
+app.secret_key = "fintech_v2_secret_key"
 
 USER_DB = 'users.json'
 LEDGER_DB = 'ledger.json'
 
-# --- SAFETY SYSTEM: Prevents Crashes ---
+# --- HELPERS ---
 def init_db():
     if not os.path.exists(USER_DB):
         with open(USER_DB, 'w') as f: json.dump({}, f)
@@ -21,7 +22,7 @@ def load_db(filename):
     try:
         with open(filename, 'r') as f: return json.load(f)
     except:
-        return {} # Return empty dict if file is corrupted
+        return {}
 
 def save_db(filename, data):
     with open(filename, 'w') as f: json.dump(data, f, indent=4)
@@ -30,7 +31,7 @@ def save_db(filename, data):
 @app.route('/')
 def index():
     if 'username' in session: return redirect(url_for('dashboard'))
-    return render_template('login.html')
+    return render_template('login.html') # Use the same login as before
 
 @app.route('/auth', methods=['POST'])
 def auth():
@@ -57,46 +58,90 @@ def dashboard():
     if 'username' not in session: return redirect(url_for('index'))
     
     all_data = load_db(LEDGER_DB)
-    # Get user's data or empty list if new user
     user_txs = all_data.get(session['username'], [])
     
-    # Calculate Math
+    # Get Current Date (YYYY-MM-DD)
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    
+    # Filter Data
+    today_txs = []
+    history_txs = []
+    
+    for tx in user_txs:
+        # tx['date'] will look like '2023-10-27'
+        if tx.get('date') == today_str:
+            today_txs.append(tx)
+        else:
+            history_txs.append(tx)
+            
+    # Calculate Totals
     balance = sum(t['amount'] for t in user_txs)
     income = sum(t['amount'] for t in user_txs if t['amount'] > 0)
     expense = sum(t['amount'] for t in user_txs if t['amount'] < 0)
 
-    return render_template('ledger.html', 
-                           txs=user_txs[::-1], # Show newest first 
-                           balance=balance, 
-                           income=income, 
-                           expense=expense, 
-                           user=session['username'])
+    # Get Currency Preference (Default to USD)
+    currency = session.get('currency', 'USD')
+    rate = 83 if currency == 'INR' else 1 # Simple conversion rate
+    symbol = '₹' if currency == 'INR' else '$'
+
+    return render_template('dashboard.html', 
+                           today_txs=today_txs[::-1], 
+                           balance=balance * rate, 
+                           income=income * rate, 
+                           expense=expense * rate,
+                           user=session['username'],
+                           symbol=symbol,
+                           currency=currency)
 
 @app.route('/add', methods=['POST'])
 def add_transaction():
     if 'username' not in session: return redirect(url_for('index'))
     
-    try:
-        amt = float(request.form.get('amount'))
-        desc = request.form.get('description')
-        t_type = request.form.get('type')
+    amt = float(request.form.get('amount'))
+    desc = request.form.get('description')
+    t_type = request.form.get('type')
+    
+    # Store everything in USD base value for consistency
+    currency = session.get('currency', 'USD')
+    if currency == 'INR':
+        amt = amt / 83 # Convert back to base USD for storage
+
+    final_amt = amt if t_type == 'income' else -amt
+    
+    # Capture Time
+    now = datetime.now()
+    
+    new_tx = {
+        "amount": final_amt,
+        "description": desc,
+        "type": t_type,
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%I:%M %p") # e.g., 02:30 PM
+    }
+
+    all_data = load_db(LEDGER_DB)
+    if session['username'] not in all_data: 
+        all_data[session['username']] = []
         
-        final_amt = amt if t_type == 'income' else -amt
-        
-        all_data = load_db(LEDGER_DB)
-        if session['username'] not in all_data: 
-            all_data[session['username']] = []
-            
-        all_data[session['username']].append({
-            "amount": final_amt,
-            "description": desc,
-            "type": t_type
-        })
-        save_db(LEDGER_DB, all_data)
-    except:
-        pass # Ignore errors for now
+    all_data[session['username']].append(new_tx)
+    save_db(LEDGER_DB, all_data)
         
     return redirect(url_for('dashboard'))
+
+@app.route('/toggle_currency')
+def toggle_currency():
+    current = session.get('currency', 'USD')
+    session['currency'] = 'INR' if current == 'USD' else 'USD'
+    return redirect(url_for('dashboard'))
+
+@app.route('/history')
+def history():
+    if 'username' not in session: return redirect(url_for('index'))
+    all_data = load_db(LEDGER_DB)
+    user_txs = all_data.get(session['username'], [])
+    
+    # Sort by newest first
+    return render_template('history.html', txs=user_txs[::-1])
 
 @app.route('/logout')
 def logout():
@@ -105,3 +150,40 @@ def logout():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+@app.route('/add', methods=['POST'])
+def add_transaction():
+    if 'username' not in session: return redirect(url_for('index'))
+    
+    amt = float(request.form.get('amount'))
+    desc = request.form.get('description')
+    t_type = request.form.get('type')
+    entry_currency = request.form.get('entry_currency') # New field from form
+
+    # LOGIC: Convert input to USD for storage (Base Currency)
+    # We store everything in one base currency to keep the total balance accurate
+    if entry_currency == 'INR':
+        stored_amt = amt / 83.0 # Convert to USD base
+    else:
+        stored_amt = amt
+
+    final_amt = stored_amt if t_type == 'income' else -stored_amt
+    
+    now = datetime.now()
+    new_tx = {
+        "amount": final_amt,
+        "description": desc,
+        "type": t_type,
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%I:%M %p"),
+        "original_currency": entry_currency # Keep track of what they typed
+    }
+
+    all_data = load_db(LEDGER_DB)
+    if session['username'] not in all_data: 
+        all_data[session['username']] = []
+        
+    all_data[session['username']].append(new_tx)
+    save_db(LEDGER_DB, all_data)
+        
+    return redirect(url_for('dashboard'))

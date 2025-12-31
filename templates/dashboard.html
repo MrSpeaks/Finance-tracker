@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fintech 2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* BASE STYLES */
+        body { background: #0b0e14; color: white; font-family: 'Outfit', sans-serif; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; }
+        
+        /* HEADER */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .currency-btn { background: #1f2937; border: 1px solid #374151; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        .currency-btn:hover { background: #374151; }
+        .logout { color: #ef4444; text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+
+        /* MAIN BALANCE CARD (Glassmorphism) */
+        .balance-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.3);
+        }
+        .balance-title { color: #9ca3af; font-size: 0.9rem; margin-bottom: 5px; }
+        .balance-amount { font-size: 3rem; font-weight: 700; margin: 0; letter-spacing: -1px; }
+
+        /* ADD FORM */
+        .add-box { background: #111827; padding: 15px; border-radius: 20px; margin-bottom: 25px; border: 1px solid #1f2937; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        input, select { background: #1f2937; border: none; padding: 12px; border-radius: 12px; color: white; width: 100%; outline: none; font-family: inherit; }
+        .btn-add { background: #3b82f6; color: white; width: 100%; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+        /* TRANSACTIONS LIST */
+        h3 { font-size: 1.1rem; color: #e5e7eb; margin-bottom: 15px; }
+        .tx-item { background: #111827; padding: 15px; border-radius: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #1f2937; }
+        .tx-left { display: flex; flex-direction: column; }
+        .tx-desc { font-weight: 500; font-size: 1rem; }
+        .tx-time { font-size: 0.75rem; color: #6b7280; margin-top: 4px; }
+        .income { color: #10b981; font-weight: 600; }
+        .expense { color: #ef4444; font-weight: 600; }
+
+        /* HISTORY LINK */
+        .history-link { display: block; text-align: center; margin-top: 30px; color: #9ca3af; text-decoration: none; padding: 15px; background: #1f2937; border-radius: 16px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <a href="/toggle_currency" class="currency-btn">Mode: {{ currency }}</a>
+            <a href="/logout" class="logout">Logout</a>
+        </div>
+
+        <div class="balance-card">
+            <div class="balance-title">Total Balance</div>
+            <h1 class="balance-amount">{{ symbol }}{{ "%.2f"|format(balance) }}</h1>
+            <div style="font-size: 0.85rem; margin-top: 10px; color: #9ca3af;">
+                In: <span style="color: #10b981;">{{ symbol }}{{ "%.2f"|format(income) }}</span> &nbsp;|&nbsp; 
+                Out: <span style="color: #ef4444;">{{ symbol }}{{ "%.2f"|format(expense) }}</span>
+            </div>
+        </div>
+
+        <div class="add-box">
+    <form action="/add" method="post">
+    <div class="form-row">
+            <input type="text" name="description" placeholder="E.g. Dinner with friends" required>
+        </div>
+        <div class="form-row">
+            <input type="number" name="amount" placeholder="0.00" step="0.01" required style="flex: 2;">
+            
+            <select name="entry_currency" style="flex: 1; background: #374151;">
+                <option value="USD">USD ($)</option>
+                <option value="INR">INR (₹)</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <select name="type">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-add">Add Transaction</button>
+    </form>
+    </div>
+
+        <h3>Today's Activity</h3>
+        {% if today_txs %}
+            {% for tx in today_txs %}
+            <div class="tx-item">
+                <div class="tx-left">
+                    <span class="tx-desc">{{ tx.description }}</span>
+                    <span class="tx-time">{{ tx.time }}</span>
+                </div>
+                <div class="{% if tx.type == 'income' %}income{% else %}expense{% endif %}">
+                    {% if tx.type == 'income' %}+{% else %}-{% endif %}{{ symbol }}{{ "%.2f"|format(tx.amount * (83 if currency == 'INR' else 1) | abs) }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; color: #4b5563; font-size: 0.9rem;">No transactions today yet.</p>
+        {% endif %}
+
+        <a href="/history" class="history-link">📜 View Past Transactions</a>
+    </div>
+
+</body>
+</html>

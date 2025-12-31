@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>History</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0b0e14; color: white; font-family: 'Outfit', sans-serif; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; }
+        .tx-item { background: #111827; padding: 15px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #1f2937; display: flex; justify-content: space-between; }
+        .back-btn { color: #3b82f6; text-decoration: none; font-weight: bold; margin-bottom: 20px; display: block; }
+        .date-label { font-size: 0.8rem; color: #6b7280; margin-top: 20px; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+        <h2>Transaction History</h2>
+        
+        {% for tx in txs %}
+            <div class="tx-item">
+                <div>
+                    <div style="font-weight: 500;">{{ tx.description }}</div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">{{ tx.date }} at {{ tx.time }}</div>
+                </div>
+                <div style="font-weight: 600; color: {% if tx.amount > 0 %}#10b981{% else %}#ef4444{% endif %};">
+                    {{ tx.amount }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
