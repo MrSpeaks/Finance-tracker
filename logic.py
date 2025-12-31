@@ -94,39 +94,7 @@ def dashboard():
                            currency=currency)
 
 @app.route('/add', methods=['POST'])
-def add_transaction():
-    if 'username' not in session: return redirect(url_for('index'))
-    
-    amt = float(request.form.get('amount'))
-    desc = request.form.get('description')
-    t_type = request.form.get('type')
-    
-    # Store everything in USD base value for consistency
-    currency = session.get('currency', 'USD')
-    if currency == 'INR':
-        amt = amt / 83 # Convert back to base USD for storage
 
-    final_amt = amt if t_type == 'income' else -amt
-    
-    # Capture Time
-    now = datetime.now()
-    
-    new_tx = {
-        "amount": final_amt,
-        "description": desc,
-        "type": t_type,
-        "date": now.strftime("%Y-%m-%d"),
-        "time": now.strftime("%I:%M %p") # e.g., 02:30 PM
-    }
-
-    all_data = load_db(LEDGER_DB)
-    if session['username'] not in all_data: 
-        all_data[session['username']] = []
-        
-    all_data[session['username']].append(new_tx)
-    save_db(LEDGER_DB, all_data)
-        
-    return redirect(url_for('dashboard'))
 
 @app.route('/toggle_currency')
 def toggle_currency():
