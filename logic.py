@@ -60,15 +60,50 @@ def dashboard():
     return render_template('dashboard.html', today_txs=today_txs[::-1], 
                            balance=bal*rate, income=inc*rate, expense=exp*rate,
                            symbol=sym, currency=mode)
-
 @app.route('/add', methods=['POST'])
 def add():
-    amt, desc, t_type = float(request.form.get('amount')), request.form.get('description'), request.form.get('type')
-    mode = session.get('currency', 'USD')
-    
-    # CONVERSION: If adding in INR mode, divide by 83 to store as USD
-    val = (amt / 83.0) if mode == 'INR' else amt
-    val = val if t_type == 'income' else -val
+    try:
+        # 1. Get data safely
+        raw_amount = request.form.get('amount')
+        desc = request.form.get('description', 'No Description')
+        t_type = request.form.get('type')
+        
+        if not raw_amount:
+            return "Error: Please enter an amount! <a href='/dashboard'>Go back</a>"
+            
+        amt = float(raw_amount)
+        mode = session.get('currency', 'USD')
+        
+        # 2. Handle Conversion
+        val = (amt / 83.0) if mode == 'INR' else amt
+        val = val if t_type == 'income' else -val
+
+        # 3. Load DB with Error Handling
+        db = load_db(LEDGER_DB)
+        user = session.get('username')
+        
+        if not user:
+            return redirect(url_for('index'))
+
+        if user not in db: 
+            db[user] = []
+            
+        # 4. Create Entry
+        db[user].append({
+            "amount": val, 
+            "description": desc, 
+            "type": t_type,
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "time": datetime.now().strftime("%I:%M %p")
+        })
+        
+        # 5. Save with confirmation
+        save_db(LEDGER_DB, db)
+        return redirect(url_for('dashboard'))
+
+    except Exception as e:
+        # This will show the real error on your screen instead of 'Internal Server Error'
+        return f"Logic Error: {str(e)}. <a href='/dashboard'>Go back</a>"
 
 def load_db(filename):
     # If file doesn't exist, create it with empty braces
