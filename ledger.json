@@ -21,6 +21,27 @@
             "type": "income",
             "date": "2025-12-31",
             "time": "09:07 PM"
+        },
+        {
+            "amount": -10000.0,
+            "description": "Dinner with family",
+            "type": "expense",
+            "date": "2025-12-31",
+            "time": "10:04 PM"
+        },
+        {
+            "amount": 120481927.71084337,
+            "description": "Business ",
+            "type": "income",
+            "date": "2025-12-31",
+            "time": "10:05 PM"
+        },
+        {
+            "amount": -120473863.71084337,
+            "description": "..",
+            "type": "expense",
+            "date": "2026-01-01",
+            "time": "11:23 AM"
         }
     ],
     "Ginni": [
