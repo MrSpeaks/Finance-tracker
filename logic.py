@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "fintech_v2_ultra_secret_key"
+app.secret_key = "any_long_random_string_here_12345"
 
 USER_DB = 'users.json'
 LEDGER_DB = 'ledger.json'
@@ -70,15 +70,28 @@ def add():
     val = (amt / 83.0) if mode == 'INR' else amt
     val = val if t_type == 'income' else -val
 
-    db = load_db(LEDGER_DB)
-    if session['username'] not in db: db[session['username']] = []
-    db[session['username']].append({
-        "amount": val, "description": desc, "type": t_type,
-        "date": datetime.now().strftime("%Y-%m-%d"),
-        "time": datetime.now().strftime("%I:%M %p")
-    })
-    save_db(LEDGER_DB, db)
-    return redirect(url_for('dashboard'))
+def load_db(filename):
+    # If file doesn't exist, create it with empty braces
+    if not os.path.exists(filename): 
+        with open(filename, 'w') as f: 
+            json.dump({}, f)
+        return {}
+    
+    # If file exists but is empty, return empty dict and fix the file
+    if os.stat(filename).st_size == 0:
+        with open(filename, 'w') as f: 
+            json.dump({}, f)
+        return {}
+
+    try:
+        with open(filename, 'r') as f: 
+            return json.load(f)
+    except json.JSONDecodeError:
+        # If the file is corrupted/invalid, reset it
+        with open(filename, 'w') as f: 
+            json.dump({}, f)
+        return {}
+
 
 @app.route('/toggle_currency')
 def toggle():
