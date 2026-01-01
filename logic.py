@@ -25,18 +25,41 @@ def index():
     return render_template('login.html')
 
 @app.route('/auth', methods=['POST'])
+@app.route('/auth', methods=['POST'])
 def auth():
-    action, user, pwd = request.form.get('action'), request.form.get('username'), request.form.get('password')
+    # Get values from the form
+    action = request.form.get('action')
+    user = request.form.get('username')
+    pwd = request.form.get('password')
+    
     db = load_db(USER_DB)
+
     if action == 'signup':
-        if user in db: return "User exists!"
+        if user in db:
+            return "User already exists! <a href='/'>Try Login</a>"
+        # Hash the password and save
         db[user] = generate_password_hash(pwd)
         save_db(USER_DB, db)
         session['username'] = user
-    else:
-        if user in db and check_password_hash(db[user], pwd): session['username'] = user
-        else: return "Invalid Login! <a href='/'>Try again</a>"
-    return redirect(url_for('dashboard'))
+        session['currency'] = 'USD' # Default currency for new users
+        return redirect(url_for('dashboard'))
+
+    elif action == 'login':
+        # 1. Check if user exists
+        if user not in db:
+            return "User not found! <a href='/'>Sign up here</a>"
+        
+        # 2. Check if password is correct
+        if check_password_hash(db[user], pwd):
+            session['username'] = user
+            # Keep their currency preference if it exists, otherwise USD
+            if 'currency' not in session:
+                session['currency'] = 'USD'
+            return redirect(url_for('dashboard'))
+        else:
+            return "Wrong password! <a href='/'>Try again</a>"
+    
+    return "Unknown Error. <a href='/'>Go back</a>"
 
 @app.route('/dashboard')
 def dashboard():
